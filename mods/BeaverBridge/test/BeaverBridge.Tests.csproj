@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Exercises the mod's JSON and HTTP layers outside the game. Those two files
+       have no game dependencies; UnityEngine.Vector3Int is stubbed. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RollForward>Major</RollForward>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../src/Json.cs" />
+    <Compile Include="../src/Http.cs" />
+  </ItemGroup>
+</Project>

@@ -246,3 +246,34 @@ hand-written `System.Reflection.Metadata` dumper described above, and it works
 on any version of the game without a build step. Evidence IDs for every table
 above are in the session ledger; the artifact digests are the installed
 1.1.2.7 files.
+
+---
+
+## Rebuild (0.9.0, 2026-11-05)
+
+The source now lives in `mods/BeaverBridge/src/`, rebuilt from these notes and
+the 1.1.2.7 API check above. It compiles with zero warnings against the
+installed game and its JSON and HTTP layers pass a unit test harness. It has
+not yet been loaded in the game.
+
+Resolved during the rebuild:
+
+- `GameSaver.QueueSaveSkippingNameValidation(SaveReference, Action onSaveCompleted)`:
+  the second argument is a completion callback.
+- The builder is `Timberborn.EntitySystem.EntitySetup.Builder`, constructed
+  from a `Blueprint`; `EntitySetup`'s own constructor is private.
+- `Placement` lives in `Timberborn.Coordinates`, as do `Orientation` and
+  `FlipMode` (a struct with `Unflipped` / `Flipped`), not in `BlockSystem`.
+- Grid to world for the camera is `CoordinateSystem.GridToWorldCentered`.
+- An entity's template name is its GameObject `Name` minus `(Clone)`.
+- District membership of a building comes from each
+  `DistrictCenter.DistrictBuildingRegistry.GetEnabledBuildings<Building>()`.
+- Auto-orientation: try each `Orientation` with a fresh builder and placement;
+  a failed attempt throws and creates nothing, so nothing is kept.
+- Reference only `Timberborn.*.dll`, `Bindito.Core.dll`,
+  `UnityEngine.CoreModule.dll` and `System.Collections.Immutable.dll` from the
+  game. Referencing the game's `mscorlib`/`netstandard` copies alongside the
+  SDK's reference pack produces duplicate-type errors.
+
+`tools/apidump` replaces the hand-written reflection dumper. The whole
+`Managed` folder dumps in under a second.

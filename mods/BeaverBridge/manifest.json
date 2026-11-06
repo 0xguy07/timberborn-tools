@@ -1,7 +1,7 @@
 {
   "Name": "Beaver Bridge",
-  "Version": "0.8.0",
+  "Version": "0.9.0",
   "Id": "Friley.BeaverBridge",
-  "MinimumGameVersion": "1.1.0.0",
+  "MinimumGameVersion": "1.1.2.7",
   "Description": "Local HTTP control API for external agents."
 }

@@ -7,7 +7,9 @@ Tools and notes for [Timberborn](https://mechanistry.com/timberborn), built by r
 
 - **`maptools/`** writes and validates `.timber` map files from plain Python. Includes a generator for *Practice Valley*, a beginner-friendly 128x128 map, and a validator that catches the silent ways a hand-built map dies on load.
 - **`bridge/`** is a read-only [MCP](https://modelcontextprotocol.io) server over your saves. Ask a model about districts, food, water, power and logistics in a running colony. Stdlib Python only.
-- **`docs/`** holds the reverse-engineered `.timber` format, mechanics measured from a 600-day colony, and build notes for a C# mod that exposes the live game over local HTTP.
+- **`mods/BeaverBridge/`** is a C# mod that exposes the live game over local HTTP. Builds offline against the installed game.
+- **`tools/`** holds an API dump tool for the game's assemblies and a script to sync a local copy of them.
+- **`docs/`** holds the reverse-engineered `.timber` format, mechanics measured from a 600-day colony, and the mod's build notes.
 - **`maps/`** ships the generated *Practice Valley* map, ready to drop into your `Maps` folder.
 
 Verified against game version 1.1.2.4 (bridge) and 1.0.13.1 (map tools). Nothing here is affiliated with Mechanistry.
@@ -43,7 +45,22 @@ Saves are read from `~/Documents/Timberborn` or the platform save folder; set `T
 
 ## Beaver Bridge mod
 
-`docs/modding-notes.md` documents a working mod that runs an HTTP API inside the game: main-thread job pump, registration, placement chain, endpoints, and the gotchas that only show up at runtime. `mods/BeaverBridge/manifest.json` is the mod manifest. The C# source was not preserved and is being rebuilt from the notes; until then the mod is documentation, not a download.
+`mods/BeaverBridge/` is a C# mod that runs an HTTP API inside the game: read districts, housing, inventories, workplaces and reachability; place and demolish buildings, set priorities and worker counts, migrate beavers, move the camera, save. It builds offline against the installed game's assemblies and installs with one script. Version 0.9.0 is a rebuild of the lost 0.8.0 source, compiled against 1.1.2.7 but not yet run in the game. See [mods/BeaverBridge/README.md](mods/BeaverBridge/README.md).
+
+```sh
+mods/BeaverBridge/install.sh
+```
+
+## Tools
+
+- **`tools/apidump`** prints the public API of any .NET assembly as greppable text, using only the reflection-metadata library in the runtime. Point it at the game's `Managed` folder and you get 658 files you can grep for a signature, or diff between game versions.
+
+  ```sh
+  dotnet run --project tools/apidump -- --out /tmp/api "$HOME/Library/Application Support/Steam/steamapps/common/Timberborn/Timberborn.app/Contents/Resources/Data/Managed"
+  grep -A20 "class Timberborn.WorkSystem.Workplace " /tmp/api/Timberborn.WorkSystem.txt
+  ```
+
+- **`tools/sync-gamerefs.sh`** refreshes a local copy of the game's assemblies and records the game version, so a mod is never built against a stale copy by accident.
 
 ## Docs
 

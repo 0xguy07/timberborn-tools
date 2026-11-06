@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Beaver Bridge: a Timberborn mod that exposes the running game over local HTTP.
+
+    Build:   dotnet build -c Release
+    Install: copy bin/Release/netstandard2.1/Code.dll and ../manifest.json into
+             <Timberborn documents>/Mods/BeaverBridge/
+
+    Game assemblies are referenced straight from the installed game and never
+    copied into the output. Override the folder with -p:TimberbornManaged=...
+    or the TIMBERBORN_MANAGED environment variable.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Code</AssemblyName>
+    <RootNamespace>BeaverBridge</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TimberbornManaged Condition="'$(TimberbornManaged)' == '' and '$(TIMBERBORN_MANAGED)' != ''">$(TIMBERBORN_MANAGED)</TimberbornManaged>
+    <TimberbornManaged Condition="'$(TimberbornManaged)' == ''">$(HOME)/Library/Application Support/Steam/steamapps/common/Timberborn/Timberborn.app/Contents/Resources/Data/Managed</TimberbornManaged>
+  </PropertyGroup>
+
+  <Target Name="CheckManagedFolder" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(TimberbornManaged)/Timberborn.SingletonSystem.dll')"
+           Text="Timberborn managed folder not found at '$(TimberbornManaged)'. Pass -p:TimberbornManaged=&lt;path&gt; or set TIMBERBORN_MANAGED." />
+  </Target>
+
+  <ItemGroup>
+    <!-- Only the game's own code and the DI container: referencing the game's
+         mscorlib/netstandard copies alongside the SDK reference pack causes
+         duplicate-type errors. -->
+    <Reference Include="$(TimberbornManaged)/Timberborn.*.dll">
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="$(TimberbornManaged)/Bindito.Core.dll">
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="$(TimberbornManaged)/UnityEngine.CoreModule.dll">
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="$(TimberbornManaged)/System.Collections.Immutable.dll">
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

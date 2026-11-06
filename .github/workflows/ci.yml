@@ -45,3 +45,23 @@ jobs:
           echo "$out"
           test "$code" -eq 1
           echo "$out" | grep -q "no .timber saves found"
+
+  apidump:
+    name: Build apidump and test the mod's protocol code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build apidump
+        run: dotnet build tools/apidump -c Release -nologo
+
+      - name: Dump the tool's own assembly as a smoke test
+        run: |
+          dotnet run --project tools/apidump --no-build -c Release -- tools/apidump/bin/Release/net10.0/apidump.dll | head -20
+
+      - name: Test the mod's JSON and HTTP layers
+        run: dotnet run --project mods/BeaverBridge/test -c Release -nologo
