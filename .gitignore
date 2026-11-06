@@ -1,0 +1,15 @@
+# Game binaries and saves never belong in the repo
+*.dll
+GameRefs/
+Saves/
+PlayerData/
+*.vdf
+# Build and tool output
+__pycache__/
+*.pyc
+bin/
+obj/
+.DS_Store
+# Generated maps other than the committed sample
+maps/*.timber
+!maps/Practice\ Valley.timber
