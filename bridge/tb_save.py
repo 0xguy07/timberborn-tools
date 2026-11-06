@@ -14,17 +14,25 @@ import os
 import zipfile
 from collections import defaultdict
 
-from tb_specs import (
-    GENERATOR_KEYWORDS, HAULING_TEMPLATES, HOUSING_CAPACITY, SHAFT_KEYWORDS,
-    STORAGE_TEMPLATES,
-)
+from tb_specs import HOUSING_CAPACITY
 
 
 def saves_root():
     env = os.environ.get("TIMBERBORN_DIR")
     if env:
         return os.path.expanduser(env)
-    for c in ("~/Documents/Timberborn", "~/Library/Application Support/Timberborn"):
+    candidates = [
+        "~/Documents/Timberborn",                                   # macOS, Windows
+        "~/Library/Application Support/Timberborn",                 # macOS, older builds
+        os.path.join(os.environ.get("USERPROFILE", "~"), "Documents", "Timberborn"),
+        "~/.steam/steam/steamapps/compatdata/1062090/pfx/drive_c/users/steamuser/Documents/Timberborn",  # Linux, Proton
+        "~/.local/share/Steam/steamapps/compatdata/1062090/pfx/drive_c/users/steamuser/Documents/Timberborn",
+    ]
+    for c in candidates:
+        p = os.path.expanduser(c)
+        if os.path.isdir(os.path.join(p, "Saves")):
+            return p
+    for c in candidates:
         p = os.path.expanduser(c)
         if os.path.isdir(p):
             return p
@@ -63,7 +71,9 @@ def resolve(ref=None, settlement=None):
         return os.path.expanduser(ref)
     rows = list_saves(settlement)
     if not rows:
-        raise FileNotFoundError("no .timber saves found under %s" % saves_root())
+        raise FileNotFoundError(
+            "no .timber saves found under %s/Saves. Set TIMBERBORN_DIR to the folder "
+            "that contains your Saves directory." % saves_root())
     if ref:
         low = ref.lower()
         hit = [r for r in rows if low in r["save"].lower() or low in r["path"].lower()]

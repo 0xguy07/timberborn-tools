@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  map-tools:
+    name: Generate and validate Practice Valley
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: python -m pip install --quiet Pillow pyflakes
+
+      - name: Lint
+        run: python -m pyflakes maptools bridge
+
+      - name: Regenerate the map
+        run: python maptools/practice_valley_generator.py "/tmp/Practice Valley.timber"
+
+      - name: Validate the regenerated map
+        run: python maptools/validate_map.py "/tmp/Practice Valley.timber"
+
+      - name: Validate the committed map
+        run: python maptools/validate_map.py "maps/Practice Valley.timber"
+
+      - name: Measure arable land
+        run: python maptools/measure_arable.py "maps/Practice Valley.timber"
+
+      - name: Bridge reports a missing save folder cleanly
+        env:
+          TIMBERBORN_DIR: /tmp/no-saves-here
+        run: |
+          set +e
+          out=$(python bridge/timberborn_mcp.py --selftest 2>&1)
+          code=$?
+          set -e
+          echo "$out"
+          test "$code" -eq 1
+          echo "$out" | grep -q "no .timber saves found"

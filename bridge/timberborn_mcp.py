@@ -192,7 +192,10 @@ def main():
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--selftest":
-        s = tb_save.load(sys.argv[2] if len(sys.argv) > 2 else None)
+        try:
+            s = tb_save.load(sys.argv[2] if len(sys.argv) > 2 else None)
+        except FileNotFoundError as e:
+            sys.exit("timberborn bridge: %s" % e)
         for fn in (R.overview, R.districts, R.food_water, R.power, R.logistics,
                    R.workplaces, R.construction, R.reservoir):
             print("\n" + "=" * 70 + "\n" + fn.__name__ + "\n")

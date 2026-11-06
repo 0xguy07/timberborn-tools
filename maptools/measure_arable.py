@@ -1,4 +1,4 @@
-import json, zipfile, os, sys, math
+import json, zipfile, os, sys
 from collections import deque
 if len(sys.argv)<2: sys.exit("usage: measure_arable.py MAP.timber")
 p=os.path.expanduser(sys.argv[1])
