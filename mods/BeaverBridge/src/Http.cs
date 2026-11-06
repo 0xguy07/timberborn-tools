@@ -16,6 +16,20 @@ namespace BeaverBridge
 
         public string Q(string key, string fallback = null) => Query.TryGetValue(key, out var v) ? v : fallback;
 
+        /// <summary>
+        /// True when the request declares a JSON body. POST handlers require this: a
+        /// browser cannot send a cross-origin request with this content type without a
+        /// CORS preflight, and the bridge never answers preflights, so a web page you
+        /// happen to have open cannot drive the game through the bridge.
+        /// </summary>
+        public bool IsJsonContentType()
+        {
+            if (!Headers.TryGetValue("Content-Type", out var ct) || ct == null) return false;
+            var semi = ct.IndexOf(';');
+            var mime = (semi < 0 ? ct : ct.Substring(0, semi)).Trim();
+            return mime.Equals("application/json", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static HttpRequest Read(Stream stream)
         {
             var buffer = new MemoryStream();
@@ -98,7 +112,6 @@ namespace BeaverBridge
             var head = "HTTP/1.1 " + Status + " " + Reason(Status) + "\r\n" +
                        "Content-Type: " + ContentType + "\r\n" +
                        "Content-Length: " + body.Length + "\r\n" +
-                       "Access-Control-Allow-Origin: *\r\n" +
                        "Connection: close\r\n\r\n";
             var headBytes = Encoding.ASCII.GetBytes(head);
             var all = new byte[headBytes.Length + body.Length];
@@ -116,6 +129,7 @@ namespace BeaverBridge
                 case 404: return "Not Found";
                 case 405: return "Method Not Allowed";
                 case 409: return "Conflict";
+                case 415: return "Unsupported Media Type";
                 case 500: return "Internal Server Error";
                 case 503: return "Service Unavailable";
                 case 504: return "Gateway Timeout";

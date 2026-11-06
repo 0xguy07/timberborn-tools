@@ -74,6 +74,10 @@ mods/BeaverBridge/install.sh
 
 Issues and pull requests are welcome, especially validator checks for map failures you have hit, and bridge reports for questions the save can answer. Keep game binaries, saves and shipped maps out of the repo; `.gitignore` already refuses the obvious ones.
 
+## Security
+
+Nothing here makes a network request. The save bridge is read-only, the mod listens on loopback only and refuses requests a browser could send, and the repository ships no binaries. What each part can and cannot touch, and how to report a problem privately, is in [SECURITY.md](SECURITY.md).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

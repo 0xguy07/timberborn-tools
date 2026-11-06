@@ -32,12 +32,19 @@ Check(req.Method == "POST" && req.Path == "/place", "request line");
 Check(req.Q("filter") == "Lod ge" && req.Q("flag") == "" && req.Q("nope", "d") == "d", "query parsing");
 Check(req.Headers["content-type"] == "application/json", "headers case-insensitive");
 Check(req.Body == "{\"prefab\":\"Lodge\"}", "body by content-length: " + req.Body);
+Check(req.IsJsonContentType(), "json content type accepted");
+var plain = HttpRequest.Read(new MemoryStream(Encoding.ASCII.GetBytes("POST /speed HTTP/1.1\r\nContent-Type: text/plain\r\nContent-Length: 2\r\n\r\n{}")));
+Check(!plain.IsJsonContentType(), "text/plain refused as json");
+var charset = HttpRequest.Read(new MemoryStream(Encoding.ASCII.GetBytes("POST /speed HTTP/1.1\r\nContent-Type: Application/JSON; charset=utf-8\r\nContent-Length: 2\r\n\r\n{}")));
+Check(charset.IsJsonContentType(), "json with charset accepted, case-insensitive");
 var get = HttpRequest.Read(new MemoryStream(Encoding.ASCII.GetBytes("GET /ping HTTP/1.1\r\n\r\n")));
 Check(get.Method == "GET" && get.Path == "/ping" && get.Body == "", "GET without body");
+Check(!get.IsJsonContentType(), "no content type is not json");
 Check(HttpRequest.Read(new MemoryStream(new byte[0])) == null, "empty connection returns null");
 
 // HTTP response bytes
 var resp = Encoding.UTF8.GetString(HttpResponse.Error(404, "nope").ToBytes());
+Check(!resp.Contains("Access-Control-Allow-Origin"), "no CORS header");
 Check(resp.StartsWith("HTTP/1.1 404 Not Found\r\n") && resp.Contains("Content-Length: ") && resp.EndsWith("{\"error\":\"nope\",\"status\":404}"), "response framing");
 var body = resp.Substring(resp.IndexOf("\r\n\r\n") + 4);
 var declared = int.Parse(System.Text.RegularExpressions.Regex.Match(resp, "Content-Length: (\\d+)").Groups[1].Value);

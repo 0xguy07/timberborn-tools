@@ -27,14 +27,14 @@ curl -s localhost:7777/ping                      # {"version":"0.9.0","pumpRunni
 curl -s localhost:7777/state
 curl -s 'localhost:7777/buildings?filter=Warehouse'
 curl -s localhost:7777/workplaces
-curl -s -d '{"speed":3}' localhost:7777/speed
-curl -s -d '{"prefab":"Lodge","x":40,"y":52,"z":11,"orientation":"auto"}' localhost:7777/place
-curl -s -d '{"x":40,"y":52,"z":11,"priority":"High"}' localhost:7777/priority
-curl -s -d '{"from":"North","to":"South","adults":5}' localhost:7777/migrate
-curl -s -d '{"name":"bridge-checkpoint"}' localhost:7777/save
+curl -s -H 'Content-Type: application/json' -d '{"speed":3}' localhost:7777/speed
+curl -s -H 'Content-Type: application/json' -d '{"prefab":"Lodge","x":40,"y":52,"z":11,"orientation":"auto"}' localhost:7777/place
+curl -s -H 'Content-Type: application/json' -d '{"x":40,"y":52,"z":11,"priority":"High"}' localhost:7777/priority
+curl -s -H 'Content-Type: application/json' -d '{"from":"North","to":"South","adults":5}' localhost:7777/migrate
+curl -s -H 'Content-Type: application/json' -d '{"name":"bridge-checkpoint"}' localhost:7777/save
 ```
 
-`GET /` lists every endpoint. The full endpoint table, with request bodies, is in [docs/modding-notes.md](../../docs/modding-notes.md).
+`GET /` lists every endpoint. Every POST must carry `Content-Type: application/json`; anything else is refused with 415, which is what keeps a web page in your browser from driving the bridge (see [SECURITY.md](../../SECURITY.md)). The full endpoint table, with request bodies, is in [docs/modding-notes.md](../../docs/modding-notes.md).
 
 `pumpRunning` from `/ping` is answered on the socket thread and only says whether the main-thread pump has run at least once. If it is `false`, the mod loaded but no game is bound, which is what a stale build against a newer game looks like. Every other request waits up to five seconds for the main thread and returns 504 if nothing answers.
 

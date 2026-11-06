@@ -85,6 +85,8 @@ namespace BeaverBridge
             }
             if (r.Method == "POST")
             {
+                if (!r.IsJsonContentType())
+                    return HttpResponse.Error(415, "POST requires Content-Type: application/json");
                 Dictionary<string, object> body;
                 try { body = JsonParser.ParseObject(r.Body); }
                 catch (FormatException e) { return HttpResponse.Error(400, "invalid JSON body: " + e.Message); }
