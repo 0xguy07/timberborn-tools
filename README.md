@@ -1,5 +1,8 @@
 # timberborn-tools
 
+[![CI](https://github.com/0xguy07/timberborn-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/0xguy07/timberborn-tools/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/0xguy07/timberborn-tools)](https://github.com/0xguy07/timberborn-tools/releases/latest)
+
 Tools and notes for [Timberborn](https://mechanistry.com/timberborn), built by reading the game's files and assemblies rather than guides.
 
 - **`maptools/`** writes and validates `.timber` map files from plain Python. Includes a generator for *Practice Valley*, a beginner-friendly 128x128 map, and a validator that catches the silent ways a hand-built map dies on load.
