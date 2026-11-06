@@ -9,6 +9,8 @@ Tools and notes for [Timberborn](https://mechanistry.com/timberborn), built by r
 
 Verified against game version 1.1.2.4 (bridge) and 1.0.13.1 (map tools). Nothing here is affiliated with Mechanistry.
 
+Full documentation is on the [wiki](https://github.com/0xguy07/timberborn-tools/wiki): getting started, the map format, design rules, every validator check, the save bridge, mechanics notes, the modding guide, and the roadmap.
+
 ## Map tools
 
 ```sh
