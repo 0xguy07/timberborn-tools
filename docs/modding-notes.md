@@ -179,3 +179,70 @@ placement oracle; trust it over your own occupancy model.
 - **`Accessible.ValidAccessible` appears to be false on unfinished buildings**,
   making the placement-time reachability check a false negative. Verify against
   `/unreachable` after construction finishes instead.
+
+---
+
+## API check against 1.1.2.7 (2026-11-05)
+
+Static inspection of the installed game's managed assemblies with REA
+(`inspect_managed_artifact` / `inspect_managed_members`, no code executed).
+The notes above were written against 1.1.2.4; the installed build is now
+1.1.2.7, and **628 of 658 assemblies changed between the two**, including every
+one the bridge touches. `Bindito.Core` is among the 30 that did not change.
+Rebuild against the current `Managed` folder, not a stale copy.
+
+### Everything the bridge relied on still exists under the same name
+
+| Type | Confirmed members (1.1.2.7) |
+|---|---|
+| `Bindito.Core.Configurator`, `ContextAttribute`, `IConfigurator`, `IContainer` | present; `[Context("Game")]` registration model unchanged |
+| `Timberborn.SingletonSystem` | `ILoadableSingleton.Load`, `IUpdatableSingleton.UpdateSingleton`, `ILateUpdatableSingleton.LateUpdateSingleton`, `IPostLoadableSingleton.PostLoad`, `IUnloadableSingleton.Unload`, plus `INonSingletonLoader` / `INonSingletonPostLoader` |
+| `Timberborn.SingletonSystem.EventBus` | `Register(object)`, `Unregister(object)`, `Post(object)`, `PostNow(object)`; handlers marked with `[OnEvent]`. Not used by the bridge yet; it is the clean way to react to game events instead of polling |
+| `Timberborn.GameDistricts.DistrictCenter` | properties `District`, `DistrictPopulation`, `DistrictBuildingRegistry`, `DistrictName`, `CenterCoordinates`; methods `DistanceToCitizen`, `IsGloballyReachableFromCitizen`, `AccessibleIsOnDistrictRoad` |
+| `Timberborn.GameDistricts.DistrictBuildingRegistry` | `GetEnabledBuildings<T>()` as before, plus new `GetEnabledBuildingsInstant<T>()` |
+| `Timberborn.GameDistricts.Citizen` | `AssignedDistrict`, `HasAssignedDistrict`, `AssignDistrict(DistrictCenter)` |
+| `Timberborn.WorkSystem.Workplace` | `DesiredWorkers` getter public, **setter private**; `IncreaseDesiredWorkers()` / `DecreaseDesiredWorkers()` public; `SetDesiredWorkers(int)` exists but is private. The guarded-loop advice stands |
+| `Timberborn.TimeSystem.SpeedManager` | `CurrentSpeed` getter public, setter private; public `ChangeSpeed(float)`, `ChangeAndLockSpeed(float)`, `UnlockSpeed()`, `ChangeSpeedScale(float)`. `ChangeSpeed` stores a pending value that `LateUpdateSingleton` applies, which is exactly why a same-frame read-back is stale |
+| `Timberborn.TemplateCollectionSystem.TemplateCollectionService` | `AllTemplates` public getter |
+| `Timberborn.ConstructionSites.ConstructionFactory` | `CreateAsUnfinished(builder, Placement)` and `CreateAsFinished(builder, Placement)` |
+| `Timberborn.EntitySystem.EntityComponentRegistry` | `GetAll<T>()`, `GetEnabled<T>()`, `Register`, `Unregister` |
+| `Timberborn.GameSaveRuntimeSystem.GameSaver` | `QueueSave`, `QueueSaveSkippingNameValidation`, `SaveInstantlySkippingNameValidation`, `SaveWithoutFinishingTick` |
+
+### Drift to handle in the rebuild
+
+- **`GameSaver.QueueSaveSkippingNameValidation` now takes two parameters**, a
+  `SaveReference` and a second reference-type argument that static metadata
+  does not name. The old one-argument call will not compile. Resolve the second
+  type from the assembly (likely a completion callback) before wiring `/save`.
+- `EntitySetup`'s constructor is private; the public nested builder type is
+  present but its nested name did not match `EntitySetup/Builder` in the
+  inspector. Confirm the exact nested-type name when compiling.
+- `Timberborn.Modding` exposes `ModManifest`, `ModLoader`, `ModRepository`,
+  `ModSorter` (dependency ordering) and `UserFolderModsProvider`. Manifest
+  fields are read by `ManifestLoader`; the five keys in `manifest.json` are the
+  ones it needs.
+
+### Save-format keys confirmed from string literals
+
+`Timberborn.WaterSystem` loads these keys: `WaterMapNew`, `Levels`,
+`WaterColumns`, `ColumnOutflows` (current), and the legacy `WaterMap`,
+`WaterDepths`, `Outflows`, `ContaminationMap`, `Contaminations`,
+`PollutionMap`, `Pollutions`, with `WaterSimulationMigrator` / `IsMigrated`
+guarding the upgrade. `Timberborn.TerrainSystem` loads `TerrainMap` /
+`Voxels` and the legacy `Heights`.
+
+The terrain loader now carries the strings *"Loaded map has heights exceeding
+map size"* and *"Terrain data height exceeds map size, truncating to fit."*
+plus a `LoadingIssue.TerrainCutOffIssue`. That is an inference, not an
+observation: a wrong column depth that crashed 1.0.13.1 may now be truncated
+with a loading issue instead. Verify by loading a deliberately wrong map
+before relying on it.
+
+### How this was done
+
+REA's managed inspection reads PE/CLI metadata, member signatures, IL
+anchors, and `ldstr` literals without loading the assembly. It replaces the
+hand-written `System.Reflection.Metadata` dumper described above, and it works
+on any version of the game without a build step. Evidence IDs for every table
+above are in the session ledger; the artifact digests are the installed
+1.1.2.7 files.
